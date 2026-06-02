@@ -1,0 +1,14 @@
+# Transcrição local com GPU (RTX 3060 / CUDA 12)
+faster-whisper>=1.1.0
+
+# Runtimes CUDA via pip (evita instalar CUDA toolkit completo no Windows)
+nvidia-cublas-cu12
+nvidia-cudnn-cu12
+nvidia-cuda-runtime-cu12
+
+# Captura de comando por voz (microfone)
+sounddevice
+soundfile
+
+# Análise de ritmo de corte de vídeo de referência
+scenedetect[opencv]

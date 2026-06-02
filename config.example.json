@@ -1,0 +1,9 @@
+{
+  "model": "large-v3",
+  "device": "cuda",
+  "compute_type": "float16",
+  "language": "pt",
+  "silence_threshold": 0.6,
+  "min_segment": 0.4,
+  "padding": 0.08
+}

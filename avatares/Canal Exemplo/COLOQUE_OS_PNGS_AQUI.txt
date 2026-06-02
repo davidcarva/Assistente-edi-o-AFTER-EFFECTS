@@ -1,0 +1,18 @@
+Coloque aqui os PNGs do avatar deste canal, com fundo transparente, mesmo
+enquadramento e mesmo tamanho. Use exatamente estes nomes (11 emoções):
+
+neutro.png       (base, falando normal)
+feliz.png        (algo positivo, elogio)
+empolgado.png    (hype, novidade)
+surpreso.png     (revelacao, "nao acredito")
+pensativo.png    (duvida, explicacao)
+confuso.png      (algo estranho)
+serio.png        (ponto importante, alerta)
+triste.png       (decepcao)
+irritado.png     (critica, frustracao)
+rindo.png        (piada, momento leve)
+apontando.png    ("olha isso", chamar atencao)
+
+Obs.: so 'neutro.png' e obrigatorio (o app usa ele quando faltar alguma emocao).
+Para criar um canal novo, duplique esta pasta com outro nome dentro de "avatares".
+Pode apagar este arquivo .txt depois.

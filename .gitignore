@@ -1,0 +1,25 @@
+# Segredos / config local (contém chaves de API)
+config.json
+
+# Ambiente virtual
+.venv/
+
+# Saídas geradas
+saida/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Configs locais do Claude Code
+.claude/
+
+# Arquivos de mídia pesados (vídeos, áudio)
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.m4v
+*.wav
+*.mp3
+Vídeo referência/

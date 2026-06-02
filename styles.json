@@ -1,0 +1,62 @@
+{
+  "Reels": {
+    "silence_threshold": 0.25,
+    "min_segment": 0.4,
+    "padding": 0.02,
+    "caption_font": "SofiaPro-Bold",
+    "caption_style": "word",
+    "caption_color": [
+      1.0,
+      0.85,
+      0.1
+    ],
+    "caption_pos": "middle",
+    "caption_scale": 1.2,
+    "captions_enabled": true
+  },
+  "Podcast": {
+    "silence_threshold": 0.45,
+    "min_segment": 0.5,
+    "padding": 0.06,
+    "caption_font": "SofiaPro-Bold",
+    "caption_style": "line",
+    "caption_color": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "caption_pos": "bottom",
+    "caption_scale": 1.0,
+    "captions_enabled": true
+  },
+  "Documentario": {
+    "silence_threshold": 0.7,
+    "min_segment": 0.6,
+    "padding": 0.1,
+    "caption_font": "SofiaPro-Bold",
+    "caption_style": "line",
+    "caption_color": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "caption_pos": "bottom",
+    "caption_scale": 0.9,
+    "captions_enabled": true
+  },
+  "J the frog": {
+    "silence_threshold": 0.25,
+    "min_segment": 0.4,
+    "padding": 0.02,
+    "caption_font": "SofiaPro-Bold",
+    "caption_style": "word",
+    "caption_color": [
+      1.0,
+      0.85,
+      0.1
+    ],
+    "caption_pos": "middle",
+    "caption_scale": 1.2,
+    "captions_enabled": true
+  }
+}

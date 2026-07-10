@@ -36,6 +36,7 @@ DEFAULTS = {
     "caption_color": [1, 1, 1],
     "caption_pos": "default",
     "caption_scale": 1.0,
+    "caption_stroke": True,
     "captions_enabled": True,
     "broll_enabled": False,
     "broll_mode": "both",     # web | ia | both
@@ -43,10 +44,20 @@ DEFAULTS = {
     "broll_duration": 3.0,
     "mode": "editor",          # editor | gerador (gerador usa beats com IA)
     "target_duration": 45.0,   # duração alvo (s) no modo gerador
+    "video_context": "",       # 1-2 frases dizendo do que o vídeo é (anime X, tema Y...)
+    "instructions": "",        # diretrizes de linguagem/tom/regras do canal (vão pros prompts da IA)
+    "sd_model": "",            # ex: "cagliostrolab/animagine-xl-3.1" para anime
     "topic_engine": "rules",   # rules | llm
     "ai_provider": "openai",   # openai | anthropic (quando topic_engine == llm)
+    "openai_model": "gpt-4o-mini",  # modelo de texto OpenAI (gpt-4o = mais contexto)
     "anthropic_api_key": "",
     "openai_api_key": "",
+    "gemini_api_key": "",
+    "faceless": False,         # canal faceless: usa avatar + voz TTS
+    "tts_enabled": False,      # gerar voz com ElevenLabs a partir de um roteiro
+    "tts_voice": "",           # voice_id da ElevenLabs
+    "tts_model": "eleven_multilingual_v2",
+    "elevenlabs_api_key": "",
     "avatar_enabled": False,
     "avatar_root": "",         # pasta raiz com uma subpasta por canal
     "avatar_channel": "",      # canal escolhido (subpasta)
@@ -94,6 +105,20 @@ def learn_from_reference(ref_path: str, cfg: dict, log=print) -> dict:
     return cfg
 
 
+def voice_from_script(script_text: str, cfg: dict, out: str = "saida", log=print) -> str:
+    """Gera um .mp3 com a voz da ElevenLabs a partir de um roteiro (canais faceless)."""
+    from . import tts
+    os.makedirs(out, exist_ok=True)
+    mp3 = os.path.join(out, "roteiro_voz.mp3")
+    return tts.synthesize(
+        script_text, mp3,
+        voice_id=cfg.get("tts_voice", ""),
+        model_id=cfg.get("tts_model", "eleven_multilingual_v2"),
+        api_key=cfg.get("elevenlabs_api_key") or None,
+        log=log,
+    )
+
+
 def list_avatar_channels(root: str) -> list[str]:
     """Lista as subpastas (canais) da raiz que tenham pelo menos um 'neutro.*'."""
     if not root or not os.path.isdir(root):
@@ -117,6 +142,20 @@ def _resolve_avatar(avatar_dir: str, emotion: str) -> str | None:
 
 
 def process(media: str, cfg: dict, out: str = "saida", log=print) -> dict:
+    # Se o usuário escolheu um modelo de SD específico (ex: anime), aplica via env
+    if cfg.get("sd_model"):
+        os.environ["SD_MODEL"] = cfg["sd_model"]
+    # Modelo de texto da OpenAI (gpt-4o p/ mais contexto), lido pelos módulos de IA
+    if cfg.get("openai_model"):
+        os.environ["AI_OPENAI_MODEL"] = cfg["openai_model"]
+    # Contexto enviado à IA = tema do vídeo + diretrizes de linguagem do canal
+    ctx_parts = []
+    if cfg.get("video_context", "").strip():
+        ctx_parts.append("TEMA DO VÍDEO: " + cfg["video_context"].strip())
+    if cfg.get("instructions", "").strip():
+        ctx_parts.append("DIRETRIZES DO CANAL (linguagem, tom, o que priorizar/evitar): "
+                         + cfg["instructions"].strip())
+    ctx = "\n".join(ctx_parts)
     """Roda o pipeline completo (transcrição -> cortes -> legendas -> .jsx).
 
     `log` é um callback (str) -> None para reportar progresso (print ou GUI).
@@ -174,6 +213,7 @@ def process(media: str, cfg: dict, out: str = "saida", log=print) -> dict:
                 bts = BT.plan_beats(
                     lines, provider=cfg.get("ai_provider", "openai"),
                     api_key=api_key, target_duration=cfg.get("target_duration", 45.0),
+                    context=ctx,
                 )
                 items = [{"time": b.start, "duration": b.duration,
                           "query": b.query, "prompt": b.prompt} for b in bts]
@@ -194,12 +234,14 @@ def process(media: str, cfg: dict, out: str = "saida", log=print) -> dict:
                     log("[B-roll] Escolhendo tópicos com Claude (IA)...")
                     from . import llm_topics as LLM
                     tops = LLM.plan_broll(lines, max_topics=cfg["broll_max"],
-                                          api_key=cfg.get("anthropic_api_key") or None)
+                                          api_key=cfg.get("anthropic_api_key") or None,
+                                          context=ctx)
                 else:
                     log("[B-roll] Escolhendo tópicos com OpenAI (IA)...")
                     from . import openai_topics as OAI
                     tops = OAI.plan_broll(lines, max_topics=cfg["broll_max"],
-                                          api_key=cfg.get("openai_api_key") or None)
+                                          api_key=cfg.get("openai_api_key") or None,
+                                          context=ctx)
                 items = [{"time": t.time, "duration": cfg["broll_duration"],
                           "query": t.query, "prompt": t.prompt} for t in tops]
             except Exception as e:
@@ -249,6 +291,7 @@ def process(media: str, cfg: dict, out: str = "saida", log=print) -> dict:
                     lines, provider=cfg.get("ai_provider", "openai"),
                     api_key=(cfg.get("openai_api_key") if cfg.get("ai_provider") != "anthropic"
                              else cfg.get("anthropic_api_key")) or None,
+                    context=ctx,
                 )
             except Exception as e:
                 msg = str(e)
@@ -273,6 +316,7 @@ def process(media: str, cfg: dict, out: str = "saida", log=print) -> dict:
         captions=caps, caption_font=cfg["caption_font"],
         caption_style=cfg["caption_style"], caption_color=cfg["caption_color"],
         caption_pos=cfg["caption_pos"], caption_scale=cfg["caption_scale"],
+        caption_stroke=cfg.get("caption_stroke", True),
         broll=broll, avatar=avatar, avatar_corner=cfg["avatar_corner"],
         avatar_size=cfg["avatar_size"],
     )
@@ -290,7 +334,9 @@ def process(media: str, cfg: dict, out: str = "saida", log=print) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Assistente de Edição — corte por transcrição")
-    p.add_argument("media", help="arquivo de vídeo ou áudio")
+    p.add_argument("media", nargs="?", help="arquivo de vídeo ou áudio (ou use --roteiro)")
+    p.add_argument("--roteiro", default=None,
+                   help="arquivo .txt de roteiro: gera a voz (ElevenLabs) e usa como entrada (faceless)")
     p.add_argument("--config", default="config.json", help="JSON de configuração")
     p.add_argument("--out", default="saida", help="pasta de saída")
     p.add_argument("--comando", default=None, help="comando em linguagem natural (texto)")
@@ -311,13 +357,20 @@ def main(argv: list[str] | None = None) -> int:
                    help="pasta raiz com uma subpasta por canal")
     p.add_argument("--canal", dest="avatar_channel", default=None,
                    help="nome do canal (subpasta) a usar")
+    p.add_argument("--contexto", dest="video_context", default=None,
+                   help="1-2 frases dizendo do que o vídeo é (ex: 'anime Naruto')")
     args = p.parse_args(argv)
 
-    if not os.path.exists(args.media):
-        print(f"Arquivo não encontrado: {args.media}", file=sys.stderr)
-        return 1
-
     cfg = load_config(args.config)
+
+    media = args.media
+    if args.roteiro:
+        with open(args.roteiro, "r", encoding="utf-8") as f:
+            script = f.read()
+        media = voice_from_script(script, cfg, out=args.out)
+    if not media or not os.path.exists(media):
+        print("Forneça um arquivo de mídia ou --roteiro.", file=sys.stderr)
+        return 1
 
     comando = args.comando
     if args.voz:
@@ -347,12 +400,14 @@ def main(argv: list[str] | None = None) -> int:
         cfg["avatar_root"] = args.avatar_root
     if args.avatar_channel:
         cfg["avatar_channel"] = args.avatar_channel
+    if args.video_context:
+        cfg["video_context"] = args.video_context
 
     if args.salvar_estilo:
         ST.save_style(args.salvar_estilo, cfg)
         print(f"Estilo salvo: {args.salvar_estilo}")
 
-    process(args.media, cfg, out=args.out)
+    process(media, cfg, out=args.out)
     print("\nNo After Effects: File > Scripts > Run Script File... e selecione o .jsx")
     return 0
 

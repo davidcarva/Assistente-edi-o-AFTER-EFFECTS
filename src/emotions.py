@@ -32,12 +32,13 @@ class EmotionPlan(BaseModel):
 
 
 def classify(lines: list, provider: str = "openai", api_key: str | None = None,
-             min_hold: float = 1.5) -> list[list]:
+             min_hold: float = 1.5, context: str = "") -> list[list]:
     """Retorna segmentos [start, end, emotion] em tempo da comp."""
     if not lines:
         return []
     numbered = "\n".join(f"[{i}] ({l.start:.1f}s) {l.text}" for i, l in enumerate(lines))
-    user = f"Transcrição ({len(lines)} linhas):\n\n{numbered}"
+    ctx = f"\nCONTEXTO DO VÍDEO:\n{context.strip()}\n" if context.strip() else ""
+    user = f"Transcrição ({len(lines)} linhas):{ctx}\n\n{numbered}"
 
     plan = structured(provider, SYSTEM, user, EmotionPlan, api_key=api_key)
     per_line = {}

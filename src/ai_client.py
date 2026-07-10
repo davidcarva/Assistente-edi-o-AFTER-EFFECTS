@@ -31,7 +31,7 @@ def structured(provider: str, system: str, user: str, schema, api_key: str | Non
         raise RuntimeError("Chave OpenAI não encontrada (OPENAI_API_KEY / openai_api_key).")
     client = OpenAI(api_key=key)
     c = client.beta.chat.completions.parse(
-        model=OPENAI_MODEL,
+        model=os.environ.get("AI_OPENAI_MODEL", OPENAI_MODEL),
         messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
         response_format=schema,
     )

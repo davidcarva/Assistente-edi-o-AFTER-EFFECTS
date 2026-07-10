@@ -16,6 +16,7 @@ def build_jsx(
     caption_color: list | None = None,
     caption_pos: str = "default",
     caption_scale: float = 1.0,
+    caption_stroke: bool = True,
     broll: list | None = None,
     avatar: list | None = None,
     avatar_corner: str = "bottom-right",
@@ -30,6 +31,7 @@ def build_jsx(
     color_js = json.dumps(caption_color or [1, 1, 1])
     pos_js = json.dumps(caption_pos)
     scale_js = json.dumps(float(caption_scale))
+    stroke_js = json.dumps(bool(caption_stroke))
 
     caps = captions or []
     caps_data = [[round(c.start, 4), round(c.end, 4), c.text] for c in caps]
@@ -60,6 +62,7 @@ def build_jsx(
     var capColor = {color_js};
     var capPos = {pos_js};
     var capScale = {scale_js};
+    var capStroke = {stroke_js};
 
     app.beginUndoGroup("Assistente: corte automatico");
 
@@ -141,22 +144,32 @@ def build_jsx(
     var usableW = isVertical ? (w * 0.90) : (w * 0.80);
     var maxChars = Math.max(8, Math.floor(usableW / (fontSize * 0.55)));
 
-    // Resolve o nome PostScript real da fonte (ex: Sofia Pro Bold via Adobe Fonts)
+    // Resolve o nome PostScript real da fonte a partir do nome/família escolhida
+    // (funciona com qualquer fonte instalada ou do Adobe Fonts; prefere Bold)
     function resolveFont(want) {{
         try {{
             if (app.fonts && app.fonts.allFonts) {{
                 var fonts = app.fonts.allFonts;
+                var norm = function (s) {{ return (s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }};
+                var w = norm(want);
+                // 1) match exato de postScriptName
                 for (var i = 0; i < fonts.length; i++) {{
-                    if (fonts[i].postScriptName === want) return want;
+                    if (norm(fonts[i].postScriptName) === w) return fonts[i].postScriptName;
                 }}
-                var wantFam = "sofia", wantStyle = "bold";
+                // 2) mesma família: prefere Bold (não itálico), senão o primeiro da família
+                var best = null;
                 for (var j = 0; j < fonts.length; j++) {{
-                    var fam = (fonts[j].familyName || "").toLowerCase();
-                    var st = (fonts[j].styleName || "").toLowerCase();
-                    if (fam.indexOf(wantFam) >= 0 && st.indexOf(wantStyle) >= 0) {{
-                        return fonts[j].postScriptName;
+                    var fam = norm(fonts[j].familyName);
+                    if (!fam) continue;
+                    if (w.indexOf(fam) === 0 || fam.indexOf(w) === 0) {{
+                        var st = norm(fonts[j].styleName);
+                        if (st.indexOf("bold") >= 0 && st.indexOf("italic") < 0) {{
+                            return fonts[j].postScriptName;
+                        }}
+                        if (!best) best = fonts[j].postScriptName;
                     }}
                 }}
+                if (best) return best;
             }}
         }} catch (e) {{}}
         return want;
@@ -186,9 +199,9 @@ def build_jsx(
         doc.fontSize = fontSize;
         try {{ doc.font = resolvedFont; }} catch (e) {{}}
         doc.fillColor = capColor;
-        doc.applyStroke = true;
+        doc.applyStroke = capStroke;
         doc.strokeColor = [0, 0, 0];
-        doc.strokeWidth = strokeW;
+        doc.strokeWidth = capStroke ? strokeW : 0;
         doc.strokeOverFill = false;
         doc.justification = ParagraphJustification.CENTER_JUSTIFY;
         tl.property("Source Text").setValue(doc);

@@ -12,3 +12,28 @@ soundfile
 
 # Análise de ritmo de corte de vídeo de referência
 scenedetect[opencv]
+
+# B-roll: busca web (Openverse) e processamento de imagem
+requests
+pillow
+
+# Geração de imagem por IA local (Stable Diffusion na GPU)
+torch
+torchvision
+diffusers
+transformers
+accelerate
+safetensors
+
+# Seleção de tópicos/beats e emoção por IA (texto)
+openai
+anthropic
+
+# Análise de vídeo de referência (estilo/perfil)
+google-genai
+
+# Voz / TTS para canais faceless
+elevenlabs
+
+# Interface gráfica (tema escuro moderno)
+customtkinter

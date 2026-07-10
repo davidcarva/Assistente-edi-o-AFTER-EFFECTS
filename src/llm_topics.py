@@ -45,7 +45,8 @@ class Topic:
     score: float = 1.0
 
 
-def plan_broll(lines: list, max_topics: int = 8, api_key: str | None = None) -> list[Topic]:
+def plan_broll(lines: list, max_topics: int = 8, api_key: str | None = None,
+               context: str = "") -> list[Topic]:
     """lines: lista de captions (objs com .start e .text) em ordem cronológica."""
     import anthropic
 
@@ -57,9 +58,10 @@ def plan_broll(lines: list, max_topics: int = 8, api_key: str | None = None) -> 
         )
 
     numbered = "\n".join(f"[{i}] ({l.start:.1f}s) {l.text}" for i, l in enumerate(lines))
+    ctx = f"\nCONTEXTO DO VÍDEO:\n{context.strip()}\n" if context.strip() else ""
     user = (
         f"Transcrição ({len(lines)} linhas). Escolha no máximo {max_topics} momentos "
-        f"para B-roll.\n\n{numbered}"
+        f"para B-roll.{ctx}\n\n{numbered}"
     )
 
     client = anthropic.Anthropic(api_key=key)

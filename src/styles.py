@@ -13,10 +13,22 @@ import unicodedata
 STYLES_PATH = "styles.json"
 
 # Quais chaves da config fazem parte de um "estilo"
+# Um "estilo" agora é um PERFIL DE CANAL completo: padrão de corte + legenda +
+# tema/contexto + instruções de linguagem + fonte de imagens + faceless/avatar + voz.
 STYLE_KEYS = [
+    # padrão de corte
     "silence_threshold", "min_segment", "padding",
-    "caption_font", "caption_style", "caption_color",
-    "caption_pos", "caption_scale", "captions_enabled",
+    # legenda
+    "caption_font", "caption_style", "caption_color", "caption_pos",
+    "caption_scale", "caption_stroke", "captions_enabled",
+    # tema e linguagem (vão para a IA)
+    "video_context", "instructions",
+    # imagens / B-roll
+    "broll_enabled", "broll_mode", "sd_model", "topic_engine", "mode",
+    # faceless / avatar
+    "faceless", "avatar_enabled", "avatar_channel",
+    # voz (ElevenLabs)
+    "tts_enabled", "tts_voice", "tts_model",
 ]
 
 

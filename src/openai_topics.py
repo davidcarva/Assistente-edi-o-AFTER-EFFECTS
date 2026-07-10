@@ -12,7 +12,8 @@ from .llm_topics import BrollPlan, Topic, SYSTEM
 MODEL = "gpt-4o-mini"
 
 
-def plan_broll(lines: list, max_topics: int = 8, api_key: str | None = None) -> list[Topic]:
+def plan_broll(lines: list, max_topics: int = 8, api_key: str | None = None,
+               context: str = "") -> list[Topic]:
     from openai import OpenAI
 
     key = api_key or os.environ.get("OPENAI_API_KEY")
@@ -23,14 +24,15 @@ def plan_broll(lines: list, max_topics: int = 8, api_key: str | None = None) -> 
         )
 
     numbered = "\n".join(f"[{i}] ({l.start:.1f}s) {l.text}" for i, l in enumerate(lines))
+    ctx = f"\nCONTEXTO DO VÍDEO:\n{context.strip()}\n" if context.strip() else ""
     user = (
         f"Transcrição ({len(lines)} linhas). Escolha no máximo {max_topics} momentos "
-        f"para B-roll.\n\n{numbered}"
+        f"para B-roll.{ctx}\n\n{numbered}"
     )
 
     client = OpenAI(api_key=key)
     completion = client.beta.chat.completions.parse(
-        model=MODEL,
+        model=os.environ.get("AI_OPENAI_MODEL", MODEL),
         messages=[
             {"role": "system", "content": SYSTEM},
             {"role": "user", "content": user},

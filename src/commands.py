@@ -83,6 +83,14 @@ def parse_command(text: str, cfg: dict) -> tuple[dict, list[str]]:
         cfg["padding"] = 0.1
         notes.append("cortes mais suaves")
 
+    # contorno (stroke) da legenda
+    if re.search(r"sem (contorno|stroke|borda)", t):
+        cfg["caption_stroke"] = False
+        notes.append("legenda sem contorno")
+    elif re.search(r"com (contorno|stroke|borda)", t):
+        cfg["caption_stroke"] = True
+        notes.append("legenda com contorno")
+
     # B-roll (imagens ilustrativas)
     if re.search(r"sem (b-?roll|imagens|imagem|ilustra)", t):
         cfg["broll_enabled"] = False

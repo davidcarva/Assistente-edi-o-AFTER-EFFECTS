@@ -60,7 +60,7 @@ class Beat:
 
 
 def plan_beats(lines: list, provider: str = "openai", api_key: str | None = None,
-               target_duration: float | None = None) -> list[Beat]:
+               target_duration: float | None = None, context: str = "") -> list[Beat]:
     """Retorna beats em ORDEM cronológica, em tempo da comp.
 
     `lines` são as captions (objetos com .start e .end e .text) na timeline cortada.
@@ -71,8 +71,9 @@ def plan_beats(lines: list, provider: str = "openai", api_key: str | None = None
     numbered = "\n".join(f"[{i}] ({l.start:.1f}s-{l.end:.1f}s) {l.text}" for i, l in enumerate(lines))
     total = lines[-1].end - lines[0].start
     target_hint = f" Alvo de duração do vídeo: ~{target_duration:.0f}s." if target_duration else ""
+    ctx = f"\n\nCONTEXTO DO VÍDEO (use isso pra escolher os visuais corretos):\n{context.strip()}\n" if context.strip() else ""
     user = (
-        f"Transcrição ({len(lines)} linhas, ~{total:.1f}s de fala).{target_hint}\n\n"
+        f"Transcrição ({len(lines)} linhas, ~{total:.1f}s de fala).{target_hint}{ctx}\n\n"
         f"{numbered}\n\nGere os beats agora."
     )
 
